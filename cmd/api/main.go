@@ -21,7 +21,7 @@ func main() {
 	log.Println("It's work")
 	// Server instance initialization
 	config := api.NewConfig()
-	_, err := toml.Decode(configPath, config) // Десериализация содержимого .toml файла
+	_, err := toml.DecodeFile(configPath, config) // Десериализация содержимого .toml файла
 	//fmt.Println(res)
 	if err != nil {
 		log.Println("can't find configs file. Using default values:", err)
