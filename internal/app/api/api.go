@@ -1,6 +1,7 @@
 package api
 
 import (
+	"github.com/EvgeniyBudaev/go-specialist-server/storage"
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
 	"net/http"
@@ -10,9 +11,10 @@ import (
 
 // Base API server instance description
 type API struct {
-	config *Config
-	logger *logrus.Logger
-	router *mux.Router
+	config  *Config
+	logger  *logrus.Logger
+	router  *mux.Router
+	storage *storage.Storage // Добавление поля для работы с хранилещем
 }
 
 // API constructor: build base API instance
@@ -34,6 +36,10 @@ func (api *API) Start() error {
 	api.logger.Info("starting api server at port: ", api.config.BindAddr)
 	// Конфигурируем маршрутизатор
 	api.configureRouterField()
+	// Конфигурируем хранилище
+	if err := api.configureStorageField(); err != nil {
+		return err
+	}
 	// На этапе валидного завершения стартуем http-сервер
 	return http.ListenAndServe(api.config.BindAddr, api.router)
 }

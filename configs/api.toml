@@ -1,3 +1,6 @@
-[data.string]
+[web-server]
 bind_addr = ":8080"
 logger_level = "debug"
+
+[storage]
+database_uri = "host=localhost port=5432 user=postgres password=root dbname=specialistrestapi sslmode=disable"
