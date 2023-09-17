@@ -24,7 +24,7 @@ func main() {
 	_, err := toml.Decode(configPath, config) // Десериализация содержимого .toml файла
 	//fmt.Println(res)
 	if err != nil {
-		log.Println("Can't find configs file. Using default values: ", err)
+		log.Println("can't find configs file. Using default values: ", err)
 	}
 
 	server := api.New(config)
@@ -32,5 +32,5 @@ func main() {
 	// API server start
 	if err := server.Start(); err != nil {
 		log.Fatal(err)
-	}
+	} // или в одну строчку log.Fatal(server.Start())
 }
