@@ -3,7 +3,10 @@ package api
 import (
 	"github.com/EvgeniyBudaev/go-specialist-server/storage"
 	"github.com/sirupsen/logrus"
-	"net/http"
+)
+
+var (
+	prefix string = "/api/v1/"
 )
 
 // Пытаемся отконфигурировать наш API инстанс (а конкретнее поле logger)
@@ -18,9 +21,11 @@ func (a *API) configureLoggerField() error {
 
 // Пытаемся сконфигурировать маршрутизатор (а конкретнее поле router API)
 func (a *API) configureRouterField() {
-	a.router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("Hello! This is rest api!"))
-	})
+	a.router.HandleFunc(prefix+"/articles", a.GetAllArticles).Methods("GET")
+	a.router.HandleFunc(prefix+"/articles/{id}", a.GetArticleById).Methods("GET")
+	a.router.HandleFunc(prefix+"/articles/{id}", a.DeleteArticleById).Methods("DELETE")
+	a.router.HandleFunc(prefix+"/articles", a.CreateArticle).Methods("POST")
+	a.router.HandleFunc(prefix+"/user/register", a.RegisterUser).Methods("POST")
 }
 
 // Пытаемся сконфигурировать хранилище (storage API)
