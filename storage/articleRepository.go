@@ -60,7 +60,7 @@ func (ar *ArticleRepository) FindArticleById(id int) (*models.Article, bool, err
 
 // Select all articles
 func (ar *ArticleRepository) SelectAll() ([]*models.Article, error) {
-	query := fmt.Sprintf("SELECT * FROM %s", tableUser)
+	query := fmt.Sprintf("SELECT * FROM %s", tableArticle)
 	rows, err := ar.storage.db.Query(query)
 	if err != nil {
 		return nil, err

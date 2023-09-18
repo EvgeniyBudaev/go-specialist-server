@@ -30,10 +30,10 @@ func (a *API) configureRouterField() {
 
 // Пытаемся сконфигурировать хранилище (storage API)
 func (a *API) configureStorageField() error {
-	storage := storage.New(a.config.Storage)
-	if err := storage.Open(); err != nil {
+	storageNew := storage.New(a.config.Storage)
+	if err := storageNew.Open(); err != nil {
 		return err
 	}
-	a.storage = storage
+	a.storage = storageNew
 	return nil
 }
