@@ -26,6 +26,7 @@ func (a *API) configureRouterField() {
 	a.router.HandleFunc(prefix+"/articles/{id}", a.DeleteArticleById).Methods("DELETE")
 	a.router.HandleFunc(prefix+"/articles", a.CreateArticle).Methods("POST")
 	a.router.HandleFunc(prefix+"/user/register", a.RegisterUser).Methods("POST")
+	// new pair for auth
 }
 
 // Пытаемся сконфигурировать хранилище (storage API)
