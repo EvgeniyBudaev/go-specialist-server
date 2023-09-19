@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	prefix string = "/api/v1/"
+	prefix string = "/api/v1"
 )
 
 // Пытаемся отконфигурировать наш API инстанс (а конкретнее поле logger)

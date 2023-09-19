@@ -17,7 +17,7 @@ var (
 
 // Create user
 func (ur *UserRepository) Create(u *models.User) (*models.User, error) {
-	query := fmt.Sprintf("INSERT INTO %s (login, password) VALUES($1, $2) RETURNING id", tableUser)
+	query := fmt.Sprintf("INSERT INTO %s (login, password) VALUES ($1, $2) RETURNING id", tableUser)
 	if err := ur.storage.db.QueryRow(query, u.Login, u.Password).Scan(&u.ID); err != nil {
 		return nil, err
 	}

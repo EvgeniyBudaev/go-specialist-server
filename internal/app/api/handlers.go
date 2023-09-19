@@ -200,7 +200,7 @@ func (api *API) RegisterUser(writer http.ResponseWriter, req *http.Request) {
 		api.logger.Info("troubles while accessing database table (users) with id. err:", err)
 		msg := Message{
 			StatusCode: 500,
-			Message:    "we have some troubles to accessing database. Try again",
+			Message:    "[RegisterUser FindByLogin] we have some troubles to accessing database. Try again",
 			IsError:    true,
 		}
 		writer.WriteHeader(500)
@@ -223,7 +223,7 @@ func (api *API) RegisterUser(writer http.ResponseWriter, req *http.Request) {
 		api.logger.Info("troubles while accessing database table (users) with id. err:", err)
 		msg := Message{
 			StatusCode: 500,
-			Message:    "we have some troubles to accessing database. Try again",
+			Message:    "[RegisterUser Create] we have some troubles to accessing database. try again",
 			IsError:    true,
 		}
 		writer.WriteHeader(500)
