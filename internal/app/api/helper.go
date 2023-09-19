@@ -1,8 +1,10 @@
 package api
 
 import (
+	"github.com/EvgeniyBudaev/go-specialist-server/internal/app/middleware"
 	"github.com/EvgeniyBudaev/go-specialist-server/storage"
 	"github.com/sirupsen/logrus"
+	"net/http"
 )
 
 var (
@@ -22,11 +24,18 @@ func (a *API) configureLoggerField() error {
 // Пытаемся сконфигурировать маршрутизатор (а конкретнее поле router API)
 func (a *API) configureRouterField() {
 	a.router.HandleFunc(prefix+"/articles", a.GetAllArticles).Methods("GET")
-	a.router.HandleFunc(prefix+"/articles/{id}", a.GetArticleById).Methods("GET")
+	// Было до JWT
+	// a.router.HandleFunc(prefix+"/articles/{id}", a.GetArticleById).Methods("GET")
+	// Теперь требует наличие JWT
+	a.router.Handle(prefix+"/articles/{id}", middleware.JwtMiddleware.Handler(
+		http.HandlerFunc(a.GetArticleById),
+	)).Methods("GET")
+	//
 	a.router.HandleFunc(prefix+"/articles/{id}", a.DeleteArticleById).Methods("DELETE")
 	a.router.HandleFunc(prefix+"/articles", a.CreateArticle).Methods("POST")
 	a.router.HandleFunc(prefix+"/user/register", a.RegisterUser).Methods("POST")
 	// new pair for auth
+	a.router.HandleFunc(prefix+"/user/auth", a.PostToAuth).Methods("POST")
 }
 
 // Пытаемся сконфигурировать хранилище (storage API)

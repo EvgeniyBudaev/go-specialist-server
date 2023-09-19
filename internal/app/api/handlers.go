@@ -3,10 +3,13 @@ package api
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/EvgeniyBudaev/go-specialist-server/internal/app/middleware"
 	"github.com/EvgeniyBudaev/go-specialist-server/internal/app/models"
+	"github.com/form3tech-oss/jwt-go"
 	"github.com/gorilla/mux"
 	"net/http"
 	"strconv"
+	"time"
 )
 
 // Вспомогательная структура для формирования сообщений
@@ -17,14 +20,14 @@ type Message struct {
 }
 
 // Full API Handler initialization file
-func initHandlers(writer http.ResponseWriter) {
+func initHeaders(writer http.ResponseWriter) {
 	writer.Header().Set("Content-Type", "application/json")
 }
 
 // Возвращает все статьи из БД на данный момент
 func (api *API) GetAllArticles(writer http.ResponseWriter, req *http.Request) {
 	// Инициализируем хедеры
-	initHandlers(writer)
+	initHeaders(writer)
 	// Логируем момент начала обработки запроса
 	api.logger.Info("get all articles GET /api/v1/articles")
 	// Пытаемся что-то получить из БД
@@ -45,7 +48,7 @@ func (api *API) GetAllArticles(writer http.ResponseWriter, req *http.Request) {
 }
 
 func (api *API) GetArticleById(writer http.ResponseWriter, req *http.Request) {
-	initHandlers(writer)
+	initHeaders(writer)
 	api.logger.Info("get article by id GET /api/v1/articles/{id}")
 	id, err := strconv.Atoi(mux.Vars(req)["id"])
 	if err != nil {
@@ -87,7 +90,7 @@ func (api *API) GetArticleById(writer http.ResponseWriter, req *http.Request) {
 }
 
 func (api *API) DeleteArticleById(writer http.ResponseWriter, req *http.Request) {
-	initHandlers(writer)
+	initHeaders(writer)
 	api.logger.Info("delete article by id DELETE /api/v1/articles/{id}")
 	id, err := strconv.Atoi(mux.Vars(req)["id"])
 	if err != nil {
@@ -146,7 +149,7 @@ func (api *API) DeleteArticleById(writer http.ResponseWriter, req *http.Request)
 }
 
 func (api *API) CreateArticle(writer http.ResponseWriter, req *http.Request) {
-	initHandlers(writer)
+	initHeaders(writer)
 	api.logger.Info("create article POST /api/v1/articles")
 	var article models.Article
 	err := json.NewDecoder(req.Body).Decode(&article)
@@ -177,7 +180,7 @@ func (api *API) CreateArticle(writer http.ResponseWriter, req *http.Request) {
 }
 
 func (api *API) RegisterUser(writer http.ResponseWriter, req *http.Request) {
-	initHandlers(writer)
+	initHeaders(writer)
 	api.logger.Info("register user POST /api/v1/user/register")
 	var user models.User
 	err := json.NewDecoder(req.Body).Decode(&user)
@@ -230,6 +233,82 @@ func (api *API) RegisterUser(writer http.ResponseWriter, req *http.Request) {
 	msg := Message{
 		StatusCode: 201,
 		Message:    fmt.Sprintf("user {login:%s} successfully registered!", userAdded.Login),
+		IsError:    false,
+	}
+	writer.WriteHeader(201)
+	json.NewEncoder(writer).Encode(msg)
+}
+
+func (api *API) PostToAuth(writer http.ResponseWriter, req *http.Request) {
+	initHeaders(writer)
+	api.logger.Info("post to auth POST /api/v1/user/auth")
+	var userFromJson models.User
+	err := json.NewDecoder(req.Body).Decode(&userFromJson)
+	if err != nil {
+		api.logger.Info("invalid json received from client")
+		msg := Message{
+			StatusCode: 400,
+			Message:    "provided json is invalid",
+			IsError:    true,
+		}
+		writer.WriteHeader(400)
+		json.NewEncoder(writer).Encode(msg)
+		return
+	}
+	userInDB, ok, err := api.storage.User().FindByLogin(userFromJson.Login)
+	if err != nil {
+		api.logger.Info("can't make user search in database:", err)
+		msg := Message{
+			StatusCode: 500,
+			Message:    "we have some troubles while accessing database",
+			IsError:    true,
+		}
+		writer.WriteHeader(500)
+		json.NewEncoder(writer).Encode(msg)
+		return
+	}
+	if !ok {
+		api.logger.Info("user with that login does not exists")
+		msg := Message{
+			StatusCode: 400,
+			Message:    "user with that login does not exists in database. Try register first",
+			IsError:    true,
+		}
+		writer.WriteHeader(400)
+		json.NewEncoder(writer).Encode(msg)
+		return
+	}
+	if userInDB.Password != userFromJson.Password {
+		api.logger.Info("invalid credentials to auth")
+		msg := Message{
+			StatusCode: 404,
+			Message:    "you password is invalid",
+			IsError:    true,
+		}
+		writer.WriteHeader(404)
+		json.NewEncoder(writer).Encode(msg)
+		return
+	}
+	token := jwt.New(jwt.SigningMethodHS256)             // Тот же метод подписания токена, чт ои в middleware.go
+	claims := token.Claims.(jwt.MapClaims)               // Доп действия в формате мапы для шифрования
+	claims["exp"] = time.Now().Add(time.Hour * 2).Unix() // Время жизни токена
+	claims["admin"] = true
+	claims["name"] = userInDB.Login
+	tokenString, err := token.SignedString(middleware.SecretKey)
+	if err != nil {
+		api.logger.Info("can't claim jwt-token")
+		msg := Message{
+			StatusCode: 500,
+			Message:    "we have some troubles. Try again",
+			IsError:    true,
+		}
+		writer.WriteHeader(500)
+		json.NewEncoder(writer).Encode(msg)
+		return
+	}
+	msg := Message{
+		StatusCode: 201,
+		Message:    tokenString,
 		IsError:    false,
 	}
 	writer.WriteHeader(201)
